@@ -1,0 +1,41 @@
+PLC設定:
+Y0 ->紅燈
+Y1 ->黃燈
+Y2 ->綠燈
+
+Y3 ->第一步驟
+Y4 ->第二步驟
+Y10 ->第三步驟
+Y11 ->第四步驟
+
+HMI設定:
+
+Name: FX5U-PLC-2
+Export ID (XID): DS_752092
+Update period: 30 millisecond(ms)
+Timeout (ms): 100
+Retries: 2
+Max read bit count: 2000
+Max read register count: 125
+Max write register count: 120
+Transport type: TCP with keep-alive
+Host: 192.168.3.40
+Port: 502
+
+
+Data source exception: Urgent
+Point read exception: Urgent
+Point write exception: Urgent
+
+
+Auto_Attack設定:
+
+scan_start_time_interval=3 #每隔2分鐘
+scan_time_sleep_second=0.05 #掃描間隔
+attack_number=6 #攻擊次數
+scan_number=5 #掃描次數
+coil_number=20 #y
+m_number=8200 #m
+m_number=m_number-8192
+h_number=100 #h
+d_number=10 #d
