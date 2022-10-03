@@ -3,7 +3,7 @@
 import os
 attack_path = os.getcwd()
 filepath =attack_path+'/attack_log/log/'
-date_string='20220525'
+date_string='20220603'
 filename= date_string+'_attack_log.txt'
 class write_log():
     # def __init__(self):
