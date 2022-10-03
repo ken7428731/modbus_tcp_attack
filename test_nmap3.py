@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding:utf-8 -*-
 # 啟動命令: sudo python3 test_nmap3.py
 import nmap3
