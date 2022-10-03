@@ -404,7 +404,7 @@ for i in range(39,51): #掃描ip數量
             port_number=results[scan_ip_address]['ports'][j]['portid']
             data['port'].append(port_number)
         # 怕有些機器開啟不會回應502 port
-        data['port'].append(502)
+        data['port'].append(str(502))
         computer_information.append(data)
         print('-----------------------')
 print('computer_information='+str(computer_information))
