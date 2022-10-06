@@ -44,7 +44,7 @@ def spilt_sub_ip_name_string(message):
 
 def modbus_tcp_is_connected(ip_address,ports):
     # global modbus_tcp_client
-    modbus_tcp_client = ModbusClient(ip_address,ports,auto_open=True) #UID 可能可以不用設
+    modbus_tcp_client = ModbusClient(ip_address,int(ports),auto_open=True) #UID 可能可以不用設
     temp=modbus_tcp_client.read_coils(1)
     # if modbus_tcp_client.is_open():
     if temp != None:
@@ -404,7 +404,7 @@ sub_ip=spilt_sub_ip_name_string(str(ip_range))
 sub_ip=sub_ip[0]+'.'
 computer_information=[]
 nmapp=nmap3.NmapHostDiscovery()
-for i in range(10,14): #掃描ip數量
+for i in range(1,255): #掃描ip數量
     scan_ip_address=sub_ip+str(i)
     print('ip='+scan_ip_address)
     results = nmapp.nmap_portscan_only(scan_ip_address)
@@ -452,7 +452,7 @@ try:
         temp['modbus_tcp_socket']=[]
         for j in range(len(all_plc_state[i]['port'])):
             temp['port'].append(all_plc_state[i]['port'][j])
-            temp['modbus_tcp_socket'].append(ModbusClient(all_plc_state[i]['ip'],all_plc_state[i]['port'][j],auto_open=True)) #UID 可能可以不用設
+            temp['modbus_tcp_socket'].append(ModbusClient(all_plc_state[i]['ip'],int(all_plc_state[i]['port'][j]),auto_open=True)) #UID 可能可以不用設
         modbus_tcp_client_list.append(temp)
     
     for i in range(len(all_plc_state)):
