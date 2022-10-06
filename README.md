@@ -27,8 +27,9 @@
 
 執行步驟(Execution Steps):
 ===========
-執行程式的步驟:  
+先進到modbus_tcp_attack資料夾裡:  
     `cd modbus_tcp_attack`  
+執行程式:  
     `sudo python3 auto_modbus_tcp_attack.py 192.168.3.0/24`  
 如果要修改掃描範圍的話在到 auto_modbus_tcp_attack.py 程式裡的 #407行修改 掃描範圍  
 
@@ -36,7 +37,7 @@
 ===========
 可以參考此 [設定頁面](https://hackmd.io/@rrpSFv-qSLunmXT6FGkwBg/SksRTxVzo)  
 
-參考
+參考(Reference)
 =======
 1. https://github.com/theralfbrown/smod-1.git
 2. https://github.com/nmmapper/python3-nmap.git
