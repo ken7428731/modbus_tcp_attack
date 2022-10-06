@@ -39,6 +39,6 @@
 
 參考(Reference)
 =======
-1. https://github.com/theralfbrown/smod-1.git
-2. https://github.com/nmmapper/python3-nmap.git
-3. Industrial Control Field Protection System Based on Software-defined Network Technology: https://hdl.handle.net/11296/3zh3g6
+- https://github.com/theralfbrown/smod-1.git
+- https://github.com/nmmapper/python3-nmap.git
+- Industrial Control Field Protection System Based on Software-defined Network Technology: https://hdl.handle.net/11296/3zh3g6
